@@ -329,17 +329,17 @@
                     <div class="form-group">
                         <label for="projectName">Project Name:</label>
                         <input type="text" id="projectName" name="name" required 
-                               placeholder="e.g., sunset_garden_2024">
+                               placeholder="e.g., Arabidopsis_2025">
                     </div>
                     
                     <div class="form-group">
                         <label for="interval">Interval:</label>
                         <div class="input-group">
                             <input type="number" id="intervalValue" name="interval_value" 
-                                   min="0.01" step="0.01" value="30" required>
+                                   min="0.01" step="0.01" value="60" required>
                             <select id="intervalUnit" name="interval_unit" required>
-                                <option value="seconds" selected>Seconds</option>
-                                <option value="minutes">Minutes</option>
+                                <option value="seconds">Seconds</option>
+                                <option value="minutes" selected>Minutes</option>
                                 <option value="hours">Hours</option>
                             </select>
                         </div>
@@ -349,11 +349,11 @@
                         <label for="duration">Duration:</label>
                         <div class="input-group">
                             <input type="number" id="durationValue" name="duration_value" 
-                                   min="0.01" step="0.01" value="2" required>
+                                   min="0.01" step="0.01" value="10" required>
                             <select id="durationUnit" name="duration_unit" required>
                                 <option value="minutes">Minutes</option>
-                                <option value="hours" selected>Hours</option>
-                                <option value="days">Days</option>
+                                <option value="hours">Hours</option>
+                                <option value="days" selected>Days</option>
                             </select>
                         </div>
                     </div>
