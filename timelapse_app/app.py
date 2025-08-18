@@ -30,9 +30,10 @@ app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'
 
 # Configuration
-UPLOAD_FOLDER = '/home/pi/timelapse_images'
-PROJECTS_FOLDER = '/home/pi/timelapse_projects'
-USB_MOUNT_PATH = '/media/pi'
+CURRENT_PATH = os.getcwd()
+UPLOAD_FOLDER = CURRENT_PATH + '/timelapse_images'
+PROJECTS_FOLDER = CURRENT_PATH + '/timelapse_projects'
+USB_MOUNT_PATH = '/media'
 
 # Global variables
 current_session = None
