@@ -35,6 +35,10 @@ UPLOAD_FOLDER = CURRENT_PATH + '/timelapse_images'
 PROJECTS_FOLDER = CURRENT_PATH + '/timelapse_projects'
 USB_MOUNT_PATH = '/media'
 
+# Check if folders exist, and, if not, create
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(PROJECTS_FOLDER, exist_ok=True)
+
 # Global variables
 current_session = None
 camera = None

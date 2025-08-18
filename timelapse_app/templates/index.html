@@ -99,6 +99,19 @@
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
         
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .input-group input {
+            flex: 2;
+        }
+        
+        .input-group select {
+            flex: 1;
+        }
+        
         .btn {
             padding: 12px 25px;
             border: none;
@@ -259,6 +272,15 @@
             .projects-grid {
                 grid-template-columns: 1fr;
             }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .input-group input,
+            .input-group select {
+                flex: 1;
+            }
         }
     </style>
 </head>
@@ -303,7 +325,7 @@
             <!-- Timelapse Setup -->
             <div class="card" id="setupSection">
                 <h2>🎬 New Timelapse</h2>
-                <form id="timelapseForm">
+                <form id="timelapseForm" onsubmit="startTimelapse(event)">
                     <div class="form-group">
                         <label for="projectName">Project Name:</label>
                         <input type="text" id="projectName" name="name" required 
@@ -312,10 +334,10 @@
                     
                     <div class="form-group">
                         <label for="interval">Interval:</label>
-                        <div style="display: flex; gap: 10px;">
+                        <div class="input-group">
                             <input type="number" id="intervalValue" name="interval_value" 
-                                   min="0.01" step="0.01" value="30" required style="flex: 2;">
-                            <select id="intervalUnit" name="interval_unit" required style="flex: 1;">
+                                   min="0.01" step="0.01" value="30" required>
+                            <select id="intervalUnit" name="interval_unit" required>
                                 <option value="seconds" selected>Seconds</option>
                                 <option value="minutes">Minutes</option>
                                 <option value="hours">Hours</option>
@@ -325,10 +347,10 @@
                     
                     <div class="form-group">
                         <label for="duration">Duration:</label>
-                        <div style="display: flex; gap: 10px;">
+                        <div class="input-group">
                             <input type="number" id="durationValue" name="duration_value" 
-                                   min="0.01" step="0.01" value="2" required style="flex: 2;">
-                            <select id="durationUnit" name="duration_unit" required style="flex: 1;">
+                                   min="0.01" step="0.01" value="2" required>
+                            <select id="durationUnit" name="duration_unit" required>
                                 <option value="minutes">Minutes</option>
                                 <option value="hours" selected>Hours</option>
                                 <option value="days">Days</option>
@@ -372,7 +394,7 @@
                     <p><strong>Estimated End:</strong> <span id="endTime">-</span></p>
                 </div>
                 <div style="margin-top: 20px;">
-                    <button id="stopBtn" class="btn btn-danger">⏹ Stop Timelapse</button>
+                    <button id="stopBtn" class="btn btn-danger" onclick="stopTimelapse()">⏹ Stop Timelapse</button>
                 </div>
             </div>
         </div>
@@ -398,23 +420,18 @@
         
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing...');
             loadSystemInfo();
             loadProjects();
+            checkCurrentStatus();
             
             // Update system info every 30 seconds
             systemInfoInterval = setInterval(loadSystemInfo, 30000);
-            
-            // Form submission
-            document.getElementById('timelapseForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                startTimelapse();
-            });
-            
-            // Stop button
-            document.getElementById('stopBtn').addEventListener('click', stopTimelapse);
         });
         
         function showTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
             // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
@@ -434,9 +451,15 @@
         }
         
         function loadSystemInfo() {
+            console.log('Loading system info...');
             fetch('/api/system_info')
-                .then(response => response.json())
+                .then(response => {
+                    console.log('System info response:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('System info data:', data);
+                    
                     // Camera status
                     const cameraEl = document.getElementById('cameraStatus');
                     cameraEl.querySelector('p').textContent = data.camera_available ? 'Available' : 'Not Available';
@@ -465,9 +488,13 @@
                 });
         }
         
-        function startTimelapse() {
+        function startTimelapse(event) {
+            event.preventDefault();
+            console.log('Starting timelapse...');
+            
             const formData = new FormData(document.getElementById('timelapseForm'));
             const data = Object.fromEntries(formData);
+            console.log('Form data:', data);
             
             fetch('/api/start_timelapse', {
                 method: 'POST',
@@ -476,19 +503,38 @@
                 },
                 body: JSON.stringify(data)
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Start timelapse response:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Start timelapse data:', data);
                 if (data.error) {
                     showAlert(data.error, 'error');
                 } else {
                     showAlert('Timelapse started successfully!', 'success');
+                    document.getElementById('setupSection').style.display = 'none';
+                    document.getElementById('statusSection').classList.add('active');
+                    startStatusUpdates();
+                }
+            })
+            .catch(error => {
+                console.error('Error starting timelapse:', error);
+                showAlert('Failed to start timelapse', 'error');
+            });
+        }
         
         function stopTimelapse() {
+            console.log('Stopping timelapse...');
             fetch('/api/stop_timelapse', {
                 method: 'POST'
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('Stop timelapse response:', response.status);
+                return response.json();
+            })
             .then(data => {
+                console.log('Stop timelapse data:', data);
                 if (data.error) {
                     showAlert(data.error, 'error');
                 } else {
@@ -499,21 +545,40 @@
                 }
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error stopping timelapse:', error);
                 showAlert('Failed to stop timelapse', 'error');
             });
         }
         
         function startStatusUpdates() {
+            console.log('Starting status updates...');
             statusInterval = setInterval(updateStatus, 2000); // Update every 2 seconds
             updateStatus(); // Initial update
         }
         
         function stopStatusUpdates() {
+            console.log('Stopping status updates...');
             if (statusInterval) {
                 clearInterval(statusInterval);
                 statusInterval = null;
             }
+        }
+        
+        function checkCurrentStatus() {
+            console.log('Checking current status...');
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Current status:', data);
+                    if (data.status && data.status !== 'idle') {
+                        document.getElementById('setupSection').style.display = 'none';
+                        document.getElementById('statusSection').classList.add('active');
+                        startStatusUpdates();
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to check current status:', error);
+                });
         }
         
         function updateStatus() {
@@ -547,6 +612,10 @@
                     if (data.status === 'completed' || data.status === 'stopped') {
                         stopStatusUpdates();
                         showAlert(`Timelapse ${data.status}!`, 'success');
+                        setTimeout(() => {
+                            document.getElementById('setupSection').style.display = 'block';
+                            document.getElementById('statusSection').classList.remove('active');
+                        }, 3000);
                     }
                 })
                 .catch(error => {
@@ -555,14 +624,19 @@
         }
         
         function loadProjects() {
+            console.log('Loading projects...');
             fetch('/api/projects')
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Projects response:', response.status);
+                    return response.json();
+                })
                 .then(projects => {
+                    console.log('Projects data:', projects);
                     const projectsList = document.getElementById('projectsList');
                     projectsList.innerHTML = '';
                     
                     if (projects.length === 0) {
-                        projectsList.innerHTML = '<p>No projects found. Create your first timelapse!</p>';
+                        projectsList.innerHTML = '<p style="text-align: center; padding: 20px;">No projects found. Create your first timelapse!</p>';
                         return;
                     }
                     
@@ -588,6 +662,7 @@
         }
         
         function transferToUSB(projectName) {
+            console.log('Transferring project to USB:', projectName);
             // Get available USB devices
             fetch('/api/system_info')
                 .then(response => response.json())
@@ -632,6 +707,7 @@
         }
         
         function deleteProject(projectName) {
+            console.log('Deleting project:', projectName);
             if (confirm(`Are you sure you want to delete project "${projectName}"? This cannot be undone.`)) {
                 fetch(`/api/delete_project/${projectName}`, {
                     method: 'DELETE'
@@ -653,6 +729,7 @@
         }
         
         function showAlert(message, type) {
+            console.log('Showing alert:', message, type);
             const alertsDiv = document.getElementById('alerts');
             const alertDiv = document.createElement('div');
             alertDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}`;
@@ -669,13 +746,4 @@
         }
     </script>
 </body>
-</html>d('setupSection').style.display = 'none';
-                    document.getElementById('statusSection').classList.add('active');
-                    startStatusUpdates();
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showAlert('Failed to start timelapse', 'error');
-            });
-        }
+</html>
