@@ -7,7 +7,7 @@ After cloning the repo, create this file si the server runs on start up.
 sudo nano /etc/systemd/system/timelapse.service
 ```
 
-And add the following text: 
+And add the following text adapting the user and path adequatly: 
 
 ```ruby
 [Unit]
