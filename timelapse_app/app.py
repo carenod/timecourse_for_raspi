@@ -101,6 +101,11 @@ def init_camera():
     if CAMERA_AVAILABLE and camera is None:
         try:
             camera = Picamera2()
+            # Default to preview config
+            preview_config = camera.create_preview_configuration(main={"size": (640, 480)})
+            camera.configure(preview_config)
+            camera.start()
+            print("Camera initialized in preview mode")
             return True
         except Exception as e:
             print(f"Failed to initialize camera: {e}")
@@ -108,29 +113,26 @@ def init_camera():
     return CAMERA_AVAILABLE
 
 def capture_image(session, image_number):
-    """Capture a single image"""
+    """Capture a single still image without killing preview"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"{session.name}_{timestamp}_{image_number:06d}.jpg"
     filepath = os.path.join(session.folder_path, filename)
-    
+
     if CAMERA_AVAILABLE and camera:
         try:
-            # Configure camera
-            config = camera.create_still_configuration(
+            # Switch to still config for full-res capture
+            still_config = camera.create_still_configuration(
                 main={"size": session.resolution}
             )
-            camera.configure(config)
-            camera.start()
-            time.sleep(1)  # Camera warm-up
-            camera.capture_file(filepath)
-            camera.stop()
+            camera.switch_mode_and_capture_file(still_config, filepath)
+            
             session.last_image_path = filepath
             return True
         except Exception as e:
             print(f"Failed to capture image: {e}")
             return False
     else:
-        # Create dummy image for development/testing
+        # Dummy image for dev mode
         with open(filepath, 'w') as f:
             f.write(f"Dummy image {image_number} at {timestamp}")
         session.last_image_path = filepath
@@ -356,7 +358,6 @@ def delete_project(project_name):
 def generate_frames():
     if not init_camera():
         return
-    camera.start()
     while True:
         try:
             frame = camera.capture_array()
@@ -368,7 +369,6 @@ def generate_frames():
         except Exception as e:
             print(f"Stream error: {e}")
             break
-    camera.stop()
 
 @app.route('/api/preview')
 def preview():
