@@ -73,53 +73,6 @@
             border-color: #dc3545;
         }
         
-        .preview-section {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-        
-        .preview-container {
-            position: relative;
-            display: inline-block;
-            background: #000;
-            border-radius: 15px;
-            overflow: hidden;
-            border: 3px solid #667eea;
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-            max-width: 640px;
-            width: 100%;
-        }
-        
-        .preview-stream {
-            display: block;
-            width: 100%;
-            height: auto;
-            background: #000;
-        }
-        
-        .preview-placeholder {
-            width: 640px;
-            height: 480px;
-            background: #333;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 18px;
-        }
-        
-        .preview-controls {
-            margin-top: 15px;
-        }
-        
-        .setup-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            align-items: start;
-        }
-        
         .form-group {
             margin-bottom: 20px;
         }
@@ -201,16 +154,6 @@
         .btn-success:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 15px rgba(64, 192, 87, 0.4);
-        }
-        
-        .btn-secondary {
-            background: linear-gradient(135deg, #868e96 0%, #6c757d 100%);
-            color: white;
-        }
-        
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
         }
         
         .btn:disabled {
@@ -326,11 +269,6 @@
                 grid-template-columns: 1fr;
             }
             
-            .setup-grid {
-                grid-template-columns: 1fr;
-                gap: 20px;
-            }
-            
             .projects-grid {
                 grid-template-columns: 1fr;
             }
@@ -342,11 +280,6 @@
             .input-group input,
             .input-group select {
                 flex: 1;
-            }
-            
-            .preview-placeholder {
-                width: 100%;
-                height: 300px;
             }
         }
     </style>
@@ -389,94 +322,60 @@
 
         <!-- Control Tab -->
         <div id="controlTab" class="tab-content active">
-            <!-- Camera Preview -->
-            <div class="card preview-section">
-                <h2>📷 Camera Preview</h2>
-                <div class="preview-container">
-                    <img id="previewStream" class="preview-stream" style="display: none;" 
-                         src="/api/preview/stream" alt="Camera Preview">
-                    <div id="previewPlaceholder" class="preview-placeholder">
-                        <div>📷</div>
-                        <div>Camera Preview</div>
-                        <div style="margin-top: 10px; font-size: 14px;">Click "Start Preview" to begin</div>
-                    </div>
-                </div>
-                <div class="preview-controls">
-                    <button id="startPreviewBtn" class="btn btn-success" onclick="startPreview()">
-                        📹 Start Preview
-                    </button>
-                    <button id="stopPreviewBtn" class="btn btn-secondary" onclick="stopPreview()" style="display: none;">
-                        ⏹ Stop Preview
-                    </button>
-                </div>
-            </div>
-
             <!-- Timelapse Setup -->
             <div class="card" id="setupSection">
                 <h2>🎬 New Timelapse</h2>
-                <div class="setup-grid">
-                    <div>
-                        <form id="timelapseForm" onsubmit="startTimelapse(event)">
-                            <div class="form-group">
-                                <label for="projectName">Project Name:</label>
-                                <input type="text" id="projectName" name="name" required 
-                                       placeholder="e.g., Arabidopsis_2025">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="interval">Interval:</label>
-                                <div class="input-group">
-                                    <input type="number" id="intervalValue" name="interval_value" 
-                                           min="0.01" step="0.01" value="60" required>
-                                    <select id="intervalUnit" name="interval_unit" required>
-                                        <option value="seconds">Seconds</option>
-                                        <option value="minutes" selected>Minutes</option>
-                                        <option value="hours">Hours</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="duration">Duration:</label>
-                                <div class="input-group">
-                                    <input type="number" id="durationValue" name="duration_value" 
-                                           min="0.01" step="0.01" value="10" required>
-                                    <select id="durationUnit" name="duration_unit" required>
-                                        <option value="minutes">Minutes</option>
-                                        <option value="hours">Hours</option>
-                                        <option value="days" selected>Days</option>
-                                    </select>
-                                </div>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="resolution">Resolution:</label>
-                                <select id="resolution" name="resolution" required>
-                                    <option value="1920x1080">1920x1080 (Full HD)</option>
-                                    <option value="1280x720">1280x720 (HD)</option>
-                                    <option value="2592x1944">2592x1944 (Pi Camera Max)</option>
-                                    <option value="640x480">640x480 (VGA)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="quality">JPEG Quality (1-100):</label>
-                                <input type="number" id="quality" name="quality" 
-                                       min="1" max="100" value="100" required>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary">🚀 Start Timelapse</button>
-                        </form>
+                <form id="timelapseForm" onsubmit="startTimelapse(event)">
+                    <div class="form-group">
+                        <label for="projectName">Project Name:</label>
+                        <input type="text" id="projectName" name="name" required 
+                               placeholder="e.g., Arabidopsis_2025">
                     </div>
-                    <div>
-                        <h3>📊 Estimated Results</h3>
-                        <div id="estimatedResults">
-                            <p><strong>Total Images:</strong> <span id="estTotalImages">-</span></p>
-                            <p><strong>Estimated Size:</strong> <span id="estSize">-</span></p>
-                            <p><strong>Video Length (30fps):</strong> <span id="estVideoLength">-</span></p>
+                    
+                    <div class="form-group">
+                        <label for="interval">Interval:</label>
+                        <div class="input-group">
+                            <input type="number" id="intervalValue" name="interval_value" 
+                                   min="0.01" step="0.01" value="60" required>
+                            <select id="intervalUnit" name="interval_unit" required>
+                                <option value="seconds">Seconds</option>
+                                <option value="minutes" selected>Minutes</option>
+                                <option value="hours">Hours</option>
+                            </select>
                         </div>
                     </div>
-                </div>
+                    
+                    <div class="form-group">
+                        <label for="duration">Duration:</label>
+                        <div class="input-group">
+                            <input type="number" id="durationValue" name="duration_value" 
+                                   min="0.01" step="0.01" value="10" required>
+                            <select id="durationUnit" name="duration_unit" required>
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                                <option value="days" selected>Days</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="resolution">Resolution:</label>
+                        <select id="resolution" name="resolution" required>
+                            <option value="1920x1080">1920x1080 (Full HD)</option>
+                            <option value="1280x720">1280x720 (HD)</option>
+                            <option value="2592x1944">2592x1944 (Pi Camera Max)</option>
+                            <option value="640x480">640x480 (VGA)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quality">JPEG Quality (1-100):</label>
+                        <input type="number" id="quality" name="quality" 
+                               min="1" max="100" value="100" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">🚀 Start Timelapse</button>
+                </form>
             </div>
 
             <!-- Timelapse Status -->
@@ -518,7 +417,6 @@
     <script>
         let statusInterval;
         let systemInfoInterval;
-        let isPreviewActive = false;
         
         // Initialize the page
         document.addEventListener('DOMContentLoaded', function() {
@@ -526,17 +424,9 @@
             loadSystemInfo();
             loadProjects();
             checkCurrentStatus();
-            updateEstimates();
             
             // Update system info every 30 seconds
             systemInfoInterval = setInterval(loadSystemInfo, 30000);
-            
-            // Update estimates when form changes
-            document.getElementById('intervalValue').addEventListener('input', updateEstimates);
-            document.getElementById('intervalUnit').addEventListener('change', updateEstimates);
-            document.getElementById('durationValue').addEventListener('input', updateEstimates);
-            document.getElementById('durationUnit').addEventListener('change', updateEstimates);
-            document.getElementById('resolution').addEventListener('change', updateEstimates);
         });
         
         function showTab(tabName) {
@@ -560,84 +450,6 @@
             }
         }
         
-        function startPreview() {
-            console.log('Starting camera preview...');
-            
-            fetch('/api/preview/start', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    showAlert(data.error, 'error');
-                } else {
-                    document.getElementById('previewPlaceholder').style.display = 'none';
-                    document.getElementById('previewStream').style.display = 'block';
-                    document.getElementById('startPreviewBtn').style.display = 'none';
-                    document.getElementById('stopPreviewBtn').style.display = 'inline-block';
-                    isPreviewActive = true;
-                    showAlert('Camera preview started', 'success');
-                }
-            })
-            .catch(error => {
-                console.error('Error starting preview:', error);
-                showAlert('Failed to start camera preview', 'error');
-            });
-        }
-        
-        function stopPreview() {
-            console.log('Stopping camera preview...');
-            
-            fetch('/api/preview/stop', {
-                method: 'POST'
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('previewStream').style.display = 'none';
-                document.getElementById('previewPlaceholder').style.display = 'flex';
-                document.getElementById('startPreviewBtn').style.display = 'inline-block';
-                document.getElementById('stopPreviewBtn').style.display = 'none';
-                isPreviewActive = false;
-                showAlert('Camera preview stopped', 'success');
-            })
-            .catch(error => {
-                console.error('Error stopping preview:', error);
-                showAlert('Failed to stop camera preview', 'error');
-            });
-        }
-        
-        function updateEstimates() {
-            const intervalValue = parseFloat(document.getElementById('intervalValue').value) || 0;
-            const intervalUnit = document.getElementById('intervalUnit').value;
-            const durationValue = parseFloat(document.getElementById('durationValue').value) || 0;
-            const durationUnit = document.getElementById('durationUnit').value;
-            const resolution = document.getElementById('resolution').value;
-            
-            // Convert to seconds
-            let intervalSeconds = intervalValue;
-            if (intervalUnit === 'minutes') intervalSeconds *= 60;
-            else if (intervalUnit === 'hours') intervalSeconds *= 3600;
-            
-            // Convert to hours
-            let durationHours = durationValue;
-            if (durationUnit === 'minutes') durationHours /= 60;
-            else if (durationUnit === 'days') durationHours *= 24;
-            
-            if (intervalSeconds > 0 && durationHours > 0) {
-                const totalImages = Math.floor((durationHours * 3600) / intervalSeconds);
-                const estimatedSizeMB = totalImages * 2; // Rough estimate: 2MB per image
-                const videoLengthSeconds = totalImages / 30; // 30fps video
-                
-                document.getElementById('estTotalImages').textContent = totalImages.toLocaleString();
-                document.getElementById('estSize').textContent = `~${estimatedSizeMB.toLocaleString()} MB`;
-                document.getElementById('estVideoLength').textContent = `~${Math.floor(videoLengthSeconds / 60)}:${String(Math.floor(videoLengthSeconds % 60)).padStart(2, '0')} min`;
-            } else {
-                document.getElementById('estTotalImages').textContent = '-';
-                document.getElementById('estSize').textContent = '-';
-                document.getElementById('estVideoLength').textContent = '-';
-            }
-        }
-        
         function loadSystemInfo() {
             console.log('Loading system info...');
             fetch('/api/system_info')
@@ -656,4 +468,282 @@
                     // Disk space
                     const diskEl = document.getElementById('diskSpace');
                     diskEl.querySelector('p').textContent = `${data.disk_free_gb}GB free of ${data.disk_total_gb}GB`;
-                    const diskClass = data.disk_used_percent > 90 ? 'danger
+                    const diskClass = data.disk_used_percent > 90 ? 'danger' : data.disk_used_percent > 80 ? 'warning' : 'good';
+                    diskEl.className = `info-item ${diskClass}`;
+                    
+                    // USB devices
+                    const usbEl = document.getElementById('usbDevices');
+                    usbEl.querySelector('p').textContent = data.usb_devices.length > 0 ? 
+                        data.usb_devices.join(', ') : 'None detected';
+                    usbEl.className = `info-item ${data.usb_devices.length > 0 ? 'good' : 'warning'}`;
+                    
+                    // Current time
+                    const timeEl = document.getElementById('currentTime');
+                    const time = new Date(data.current_time).toLocaleString();
+                    timeEl.querySelector('p').textContent = time;
+                })
+                .catch(error => {
+                    console.error('Failed to load system info:', error);
+                    showAlert('Failed to load system information', 'error');
+                });
+        }
+        
+        function startTimelapse(event) {
+            event.preventDefault();
+            console.log('Starting timelapse...');
+            
+            const formData = new FormData(document.getElementById('timelapseForm'));
+            const data = Object.fromEntries(formData);
+            console.log('Form data:', data);
+            
+            fetch('/api/start_timelapse', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                console.log('Start timelapse response:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Start timelapse data:', data);
+                if (data.error) {
+                    showAlert(data.error, 'error');
+                } else {
+                    showAlert('Timelapse started successfully!', 'success');
+                    document.getElementById('setupSection').style.display = 'none';
+                    document.getElementById('statusSection').classList.add('active');
+                    startStatusUpdates();
+                }
+            })
+            .catch(error => {
+                console.error('Error starting timelapse:', error);
+                showAlert('Failed to start timelapse', 'error');
+            });
+        }
+        
+        function stopTimelapse() {
+            console.log('Stopping timelapse...');
+            fetch('/api/stop_timelapse', {
+                method: 'POST'
+            })
+            .then(response => {
+                console.log('Stop timelapse response:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Stop timelapse data:', data);
+                if (data.error) {
+                    showAlert(data.error, 'error');
+                } else {
+                    showAlert('Timelapse stopped', 'success');
+                    stopStatusUpdates();
+                    document.getElementById('setupSection').style.display = 'block';
+                    document.getElementById('statusSection').classList.remove('active');
+                }
+            })
+            .catch(error => {
+                console.error('Error stopping timelapse:', error);
+                showAlert('Failed to stop timelapse', 'error');
+            });
+        }
+        
+        function startStatusUpdates() {
+            console.log('Starting status updates...');
+            statusInterval = setInterval(updateStatus, 2000); // Update every 2 seconds
+            updateStatus(); // Initial update
+        }
+        
+        function stopStatusUpdates() {
+            console.log('Stopping status updates...');
+            if (statusInterval) {
+                clearInterval(statusInterval);
+                statusInterval = null;
+            }
+        }
+        
+        function checkCurrentStatus() {
+            console.log('Checking current status...');
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Current status:', data);
+                    if (data.status && data.status !== 'idle') {
+                        document.getElementById('setupSection').style.display = 'none';
+                        document.getElementById('statusSection').classList.add('active');
+                        startStatusUpdates();
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to check current status:', error);
+                });
+        }
+        
+        function updateStatus() {
+            fetch('/api/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'idle') {
+                        stopStatusUpdates();
+                        document.getElementById('setupSection').style.display = 'block';
+                        document.getElementById('statusSection').classList.remove('active');
+                        return;
+                    }
+                    
+                    document.getElementById('currentProject').textContent = data.name || '-';
+                    document.getElementById('currentStatus').textContent = data.status || '-';
+                    document.getElementById('imagesCaptured').textContent = data.images_captured || 0;
+                    document.getElementById('totalImages').textContent = data.total_images || 0;
+                    document.getElementById('folderSize').textContent = data.folder_size || '0 B';
+                    
+                    const progress = data.progress || 0;
+                    document.getElementById('progressFill').style.width = progress + '%';
+                    
+                    if (data.start_time) {
+                        document.getElementById('startTime').textContent = new Date(data.start_time).toLocaleString();
+                    }
+                    if (data.end_time) {
+                        document.getElementById('endTime').textContent = new Date(data.end_time).toLocaleString();
+                    }
+                    
+                    // If completed or stopped, stop updates
+                    if (data.status === 'completed' || data.status === 'stopped') {
+                        stopStatusUpdates();
+                        showAlert(`Timelapse ${data.status}!`, 'success');
+                        setTimeout(() => {
+                            document.getElementById('setupSection').style.display = 'block';
+                            document.getElementById('statusSection').classList.remove('active');
+                        }, 3000);
+                    }
+                })
+                .catch(error => {
+                    console.error('Failed to update status:', error);
+                });
+        }
+        
+        function loadProjects() {
+            console.log('Loading projects...');
+            fetch('/api/projects')
+                .then(response => {
+                    console.log('Projects response:', response.status);
+                    return response.json();
+                })
+                .then(projects => {
+                    console.log('Projects data:', projects);
+                    const projectsList = document.getElementById('projectsList');
+                    projectsList.innerHTML = '';
+                    
+                    if (projects.length === 0) {
+                        projectsList.innerHTML = '<p style="text-align: center; padding: 20px;">No projects found. Create your first timelapse!</p>';
+                        return;
+                    }
+                    
+                    projects.forEach(project => {
+                        const projectDiv = document.createElement('div');
+                        projectDiv.className = 'project-item';
+                        projectDiv.innerHTML = `
+                            <h3>${project.name}</h3>
+                            <p><strong>Images:</strong> ${project.file_count}</p>
+                            <div style="margin-top: 15px;">
+                                <a href="/api/download/${project.name}" class="btn btn-primary">📥 Download ZIP</a>
+                                <button onclick="transferToUSB('${project.name}')" class="btn btn-success">💾 Transfer to USB</button>
+                                <button onclick="deleteProject('${project.name}')" class="btn btn-danger">🗑️ Delete</button>
+                            </div>
+                        `;
+                        projectsList.appendChild(projectDiv);
+                    });
+                })
+                .catch(error => {
+                    console.error('Failed to load projects:', error);
+                    showAlert('Failed to load projects', 'error');
+                });
+        }
+        
+        function transferToUSB(projectName) {
+            console.log('Transferring project to USB:', projectName);
+            // Get available USB devices
+            fetch('/api/system_info')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.usb_devices.length === 0) {
+                        showAlert('No USB devices detected', 'error');
+                        return;
+                    }
+                    
+                    let usbDevice;
+                    if (data.usb_devices.length === 1) {
+                        usbDevice = data.usb_devices[0];
+                    } else {
+                        usbDevice = prompt(`Select USB device:\n${data.usb_devices.join('\n')}\n\nEnter device name:`);
+                        if (!usbDevice || !data.usb_devices.includes(usbDevice)) {
+                            showAlert('Invalid USB device selected', 'error');
+                            return;
+                        }
+                    }
+                    
+                    // Transfer to selected USB device
+                    fetch(`/api/transfer_usb/${projectName}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ usb_device: usbDevice })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            showAlert(data.error, 'error');
+                        } else {
+                            showAlert(data.message, 'success');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Transfer failed:', error);
+                        showAlert('Transfer failed', 'error');
+                    });
+                });
+        }
+        
+        function deleteProject(projectName) {
+            console.log('Deleting project:', projectName);
+            if (confirm(`Are you sure you want to delete project "${projectName}"? This cannot be undone.`)) {
+                fetch(`/api/delete_project/${projectName}`, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        showAlert(data.error, 'error');
+                    } else {
+                        showAlert(data.message, 'success');
+                        loadProjects(); // Refresh the list
+                    }
+                })
+                .catch(error => {
+                    console.error('Delete failed:', error);
+                    showAlert('Delete failed', 'error');
+                });
+            }
+        }
+        
+        function showAlert(message, type) {
+            console.log('Showing alert:', message, type);
+            const alertsDiv = document.getElementById('alerts');
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type === 'error' ? 'error' : 'success'}`;
+            alertDiv.textContent = message;
+            
+            alertsDiv.appendChild(alertDiv);
+            
+            // Remove alert after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.parentNode.removeChild(alertDiv);
+                }
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
