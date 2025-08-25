@@ -353,14 +353,6 @@ def delete_project(project_name):
     except Exception as e:
         return jsonify({'error': f'Delete failed: {str(e)}'}), 500
 
-if __name__ == '__main__':
-    # Create necessary directories
-    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-    os.makedirs(PROJECTS_FOLDER, exist_ok=True)
-    
-    # Run the Flask app
-    app.run(host='0.0.0.0', port=5000, debug=False)
-
 def generate_frames():
     if not init_camera():
         return
@@ -382,3 +374,11 @@ def generate_frames():
 def preview():
     return Response(generate_frames(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
+if __name__ == '__main__':
+    # Create necessary directories
+    os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+    os.makedirs(PROJECTS_FOLDER, exist_ok=True)
+    
+    # Run the Flask app
+    app.run(host='0.0.0.0', port=5000, debug=False)
