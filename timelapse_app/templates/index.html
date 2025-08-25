@@ -86,23 +86,21 @@
             overflow: hidden;
             border: 3px solid #667eea;
             box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+            max-width: 640px;
+            width: 100%;
         }
         
         .preview-stream {
             display: block;
             width: 100%;
-            max-width: 640px;
             height: auto;
             background: #000;
         }
         
-        .preview-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.8);
+        .preview-placeholder {
+            width: 640px;
+            height: 480px;
+            background: #333;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -346,8 +344,9 @@
                 flex: 1;
             }
             
-            .preview-container {
+            .preview-placeholder {
                 width: 100%;
+                height: 300px;
             }
         }
     </style>
@@ -377,4 +376,284 @@
                 </div>
                 <div class="info-item" id="currentTime">
                     <h3>⏰ Current Time</h3>
-                    <p>Loading...
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('control')">🎬 Control</button>
+            <button class="tab" onclick="showTab('projects')">📁 Projects</button>
+        </div>
+
+        <!-- Control Tab -->
+        <div id="controlTab" class="tab-content active">
+            <!-- Camera Preview -->
+            <div class="card preview-section">
+                <h2>📷 Camera Preview</h2>
+                <div class="preview-container">
+                    <img id="previewStream" class="preview-stream" style="display: none;" 
+                         src="/api/preview/stream" alt="Camera Preview">
+                    <div id="previewPlaceholder" class="preview-placeholder">
+                        <div>📷</div>
+                        <div>Camera Preview</div>
+                        <div style="margin-top: 10px; font-size: 14px;">Click "Start Preview" to begin</div>
+                    </div>
+                </div>
+                <div class="preview-controls">
+                    <button id="startPreviewBtn" class="btn btn-success" onclick="startPreview()">
+                        📹 Start Preview
+                    </button>
+                    <button id="stopPreviewBtn" class="btn btn-secondary" onclick="stopPreview()" style="display: none;">
+                        ⏹ Stop Preview
+                    </button>
+                </div>
+            </div>
+
+            <!-- Timelapse Setup -->
+            <div class="card" id="setupSection">
+                <h2>🎬 New Timelapse</h2>
+                <div class="setup-grid">
+                    <div>
+                        <form id="timelapseForm" onsubmit="startTimelapse(event)">
+                            <div class="form-group">
+                                <label for="projectName">Project Name:</label>
+                                <input type="text" id="projectName" name="name" required 
+                                       placeholder="e.g., Arabidopsis_2025">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="interval">Interval:</label>
+                                <div class="input-group">
+                                    <input type="number" id="intervalValue" name="interval_value" 
+                                           min="0.01" step="0.01" value="60" required>
+                                    <select id="intervalUnit" name="interval_unit" required>
+                                        <option value="seconds">Seconds</option>
+                                        <option value="minutes" selected>Minutes</option>
+                                        <option value="hours">Hours</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="duration">Duration:</label>
+                                <div class="input-group">
+                                    <input type="number" id="durationValue" name="duration_value" 
+                                           min="0.01" step="0.01" value="10" required>
+                                    <select id="durationUnit" name="duration_unit" required>
+                                        <option value="minutes">Minutes</option>
+                                        <option value="hours">Hours</option>
+                                        <option value="days" selected>Days</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="resolution">Resolution:</label>
+                                <select id="resolution" name="resolution" required>
+                                    <option value="1920x1080">1920x1080 (Full HD)</option>
+                                    <option value="1280x720">1280x720 (HD)</option>
+                                    <option value="2592x1944">2592x1944 (Pi Camera Max)</option>
+                                    <option value="640x480">640x480 (VGA)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="quality">JPEG Quality (1-100):</label>
+                                <input type="number" id="quality" name="quality" 
+                                       min="1" max="100" value="100" required>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary">🚀 Start Timelapse</button>
+                        </form>
+                    </div>
+                    <div>
+                        <h3>📊 Estimated Results</h3>
+                        <div id="estimatedResults">
+                            <p><strong>Total Images:</strong> <span id="estTotalImages">-</span></p>
+                            <p><strong>Estimated Size:</strong> <span id="estSize">-</span></p>
+                            <p><strong>Video Length (30fps):</strong> <span id="estVideoLength">-</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timelapse Status -->
+            <div class="card status-section" id="statusSection">
+                <h2>📊 Timelapse Status</h2>
+                <div id="statusInfo">
+                    <p><strong>Project:</strong> <span id="currentProject">-</span></p>
+                    <p><strong>Status:</strong> <span id="currentStatus">-</span></p>
+                    <p><strong>Images Captured:</strong> <span id="imagesCaptured">0</span> / <span id="totalImages">0</span></p>
+                    <p><strong>Progress:</strong></p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <p><strong>Folder Size:</strong> <span id="folderSize">0 B</span></p>
+                    <p><strong>Started:</strong> <span id="startTime">-</span></p>
+                    <p><strong>Estimated End:</strong> <span id="endTime">-</span></p>
+                </div>
+                <div style="margin-top: 20px;">
+                    <button id="stopBtn" class="btn btn-danger" onclick="stopTimelapse()">⏹ Stop Timelapse</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Projects Tab -->
+        <div id="projectsTab" class="tab-content">
+            <div class="card">
+                <h2>📁 My Projects</h2>
+                <button onclick="loadProjects()" class="btn btn-primary">🔄 Refresh</button>
+                <div class="projects-grid" id="projectsList">
+                    <!-- Projects will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alerts"></div>
+    </div>
+
+    <script>
+        let statusInterval;
+        let systemInfoInterval;
+        let isPreviewActive = false;
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Page loaded, initializing...');
+            loadSystemInfo();
+            loadProjects();
+            checkCurrentStatus();
+            updateEstimates();
+            
+            // Update system info every 30 seconds
+            systemInfoInterval = setInterval(loadSystemInfo, 30000);
+            
+            // Update estimates when form changes
+            document.getElementById('intervalValue').addEventListener('input', updateEstimates);
+            document.getElementById('intervalUnit').addEventListener('change', updateEstimates);
+            document.getElementById('durationValue').addEventListener('input', updateEstimates);
+            document.getElementById('durationUnit').addEventListener('change', updateEstimates);
+            document.getElementById('resolution').addEventListener('change', updateEstimates);
+        });
+        
+        function showTab(tabName) {
+            console.log('Switching to tab:', tabName);
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+            
+            // Load projects when switching to projects tab
+            if (tabName === 'projects') {
+                loadProjects();
+            }
+        }
+        
+        function startPreview() {
+            console.log('Starting camera preview...');
+            
+            fetch('/api/preview/start', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showAlert(data.error, 'error');
+                } else {
+                    document.getElementById('previewPlaceholder').style.display = 'none';
+                    document.getElementById('previewStream').style.display = 'block';
+                    document.getElementById('startPreviewBtn').style.display = 'none';
+                    document.getElementById('stopPreviewBtn').style.display = 'inline-block';
+                    isPreviewActive = true;
+                    showAlert('Camera preview started', 'success');
+                }
+            })
+            .catch(error => {
+                console.error('Error starting preview:', error);
+                showAlert('Failed to start camera preview', 'error');
+            });
+        }
+        
+        function stopPreview() {
+            console.log('Stopping camera preview...');
+            
+            fetch('/api/preview/stop', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('previewStream').style.display = 'none';
+                document.getElementById('previewPlaceholder').style.display = 'flex';
+                document.getElementById('startPreviewBtn').style.display = 'inline-block';
+                document.getElementById('stopPreviewBtn').style.display = 'none';
+                isPreviewActive = false;
+                showAlert('Camera preview stopped', 'success');
+            })
+            .catch(error => {
+                console.error('Error stopping preview:', error);
+                showAlert('Failed to stop camera preview', 'error');
+            });
+        }
+        
+        function updateEstimates() {
+            const intervalValue = parseFloat(document.getElementById('intervalValue').value) || 0;
+            const intervalUnit = document.getElementById('intervalUnit').value;
+            const durationValue = parseFloat(document.getElementById('durationValue').value) || 0;
+            const durationUnit = document.getElementById('durationUnit').value;
+            const resolution = document.getElementById('resolution').value;
+            
+            // Convert to seconds
+            let intervalSeconds = intervalValue;
+            if (intervalUnit === 'minutes') intervalSeconds *= 60;
+            else if (intervalUnit === 'hours') intervalSeconds *= 3600;
+            
+            // Convert to hours
+            let durationHours = durationValue;
+            if (durationUnit === 'minutes') durationHours /= 60;
+            else if (durationUnit === 'days') durationHours *= 24;
+            
+            if (intervalSeconds > 0 && durationHours > 0) {
+                const totalImages = Math.floor((durationHours * 3600) / intervalSeconds);
+                const estimatedSizeMB = totalImages * 2; // Rough estimate: 2MB per image
+                const videoLengthSeconds = totalImages / 30; // 30fps video
+                
+                document.getElementById('estTotalImages').textContent = totalImages.toLocaleString();
+                document.getElementById('estSize').textContent = `~${estimatedSizeMB.toLocaleString()} MB`;
+                document.getElementById('estVideoLength').textContent = `~${Math.floor(videoLengthSeconds / 60)}:${String(Math.floor(videoLengthSeconds % 60)).padStart(2, '0')} min`;
+            } else {
+                document.getElementById('estTotalImages').textContent = '-';
+                document.getElementById('estSize').textContent = '-';
+                document.getElementById('estVideoLength').textContent = '-';
+            }
+        }
+        
+        function loadSystemInfo() {
+            console.log('Loading system info...');
+            fetch('/api/system_info')
+                .then(response => {
+                    console.log('System info response:', response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('System info data:', data);
+                    
+                    // Camera status
+                    const cameraEl = document.getElementById('cameraStatus');
+                    cameraEl.querySelector('p').textContent = data.camera_available ? 'Available' : 'Not Available';
+                    cameraEl.className = `info-item ${data.camera_available ? 'good' : 'danger'}`;
+                    
+                    // Disk space
+                    const diskEl = document.getElementById('diskSpace');
+                    diskEl.querySelector('p').textContent = `${data.disk_free_gb}GB free of ${data.disk_total_gb}GB`;
+                    const diskClass = data.disk_used_percent > 90 ? 'danger

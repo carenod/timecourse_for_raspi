@@ -23,10 +23,16 @@ import schedule
 # Try to import camera modules (will work on Pi, fallback for development)
 try:
     from picamera2 import Picamera2
+    from PIL import Image, ImageDraw, ImageFont
     CAMERA_AVAILABLE = True
 except ImportError:
     print("Warning: picamera2 not available. Running in development mode.")
     CAMERA_AVAILABLE = False
+    # Try to import PIL anyway for placeholder images
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError:
+        pass
 
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-change-this'
@@ -165,8 +171,7 @@ def generate_preview_frames():
                 # Capture frame as numpy array
                 frame = preview_camera.capture_array()
                 
-                # Convert to JPEG
-                from PIL import Image
+                # Convert to JPEG using PIL
                 pil_image = Image.fromarray(frame)
                 buffer = io.BytesIO()
                 pil_image.save(buffer, format='JPEG', quality=70)
@@ -180,24 +185,12 @@ def generate_preview_frames():
         else:
             # Fallback: generate a simple placeholder frame
             try:
-                from PIL import Image, ImageDraw, ImageFont
                 img = Image.new('RGB', (640, 480), color='lightgray')
                 draw = ImageDraw.Draw(img)
                 text = "Camera Preview\nNot Available"
-                # Try to use default font, fallback to basic if not available
-                try:
-                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
-                except:
-                    font = ImageFont.load_default()
                 
-                # Calculate text position (center)
-                bbox = draw.textbbox((0, 0), text, font=font)
-                text_width = bbox[2] - bbox[0]
-                text_height = bbox[3] - bbox[1]
-                x = (640 - text_width) // 2
-                y = (480 - text_height) // 2
-                
-                draw.text((x, y), text, fill='black', font=font, anchor='mm', align='center')
+                # Use a simple approach for text positioning
+                draw.text((320, 240), text, fill='black', anchor='mm', align='center')
                 
                 buffer = io.BytesIO()
                 img.save(buffer, format='JPEG')
@@ -205,10 +198,14 @@ def generate_preview_frames():
                 
                 yield (b'--frame\r\n'
                        b'Content-Type: image/jpeg\r\n\r\n' + buffer.read() + b'\r\n')
-                time.sleep(0.1)  # Slower update rate for placeholder
+                time.sleep(0.5)  # Slower update rate for placeholder
             except Exception as e:
                 print(f"Placeholder frame error: {e}")
-                time.sleep(0.5)
+                # Simple text response as last resort
+                simple_response = b'Camera not available'
+                yield (b'--frame\r\n'
+                       b'Content-Type: text/plain\r\n\r\n' + simple_response + b'\r\n')
+                time.sleep(1)
 
 def timelapse_worker(session):
     """Background worker for timelapse capture"""
