@@ -65,3 +65,29 @@ sudo journalctl -u timelapse.service --since "1 hour ago"
 # Disable auto-start
 sudo systemctl disable timelapse.service
 ```
+
+In order to avoid the need of wifi connection, it is possible to create a self-contained local network using NetworkManager.
+
+For this, first create a connection profile
+
+```ruby
+sudo nmcli connection add type wifi ifname wlan0 con-name timelapse_ap autoconnect yes ssid Pi_Timelapse_AP
+```
+You can replace `Pi_Timelapse_AP` with your Wi-Fi device name if different.
+
+Then, set it to access point mode:
+
+```ruby
+sudo nmcli connection modify timelapse_ap 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+```
+Add a password:
+
+```ruby
+sudo nmcli connection modify timelapse_ap wifi-sec.key-mgmt wpa-psk wifi-sec.psk "raspberry123"
+```
+
+And bring it up:
+
+```ruby
+sudo nmcli connection up timelapse_ap
+```
