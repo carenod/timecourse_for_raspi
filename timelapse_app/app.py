@@ -14,8 +14,9 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import subprocess
 import psutil
+import cv2
 
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, Response
 import schedule
 
 # Try to import camera modules (will work on Pi, fallback for development)
@@ -359,3 +360,25 @@ if __name__ == '__main__':
     
     # Run the Flask app
     app.run(host='0.0.0.0', port=5000, debug=False)
+
+def generate_frames():
+    if not init_camera():
+        return
+    camera.start()
+    while True:
+        try:
+            frame = camera.capture_array()
+            ret, buffer = cv2.imencode('.jpg', frame)
+            if not ret:
+                continue
+            yield (b'--frame\r\n'
+                   b'Content-Type: image/jpeg\r\n\r\n' + buffer.tobytes() + b'\r\n')
+        except Exception as e:
+            print(f"Stream error: {e}")
+            break
+    camera.stop()
+
+@app.route('/api/preview')
+def preview():
+    return Response(generate_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
