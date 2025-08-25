@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Raspberry Pi Timelapse Web Controller
-Main Flask application for controlling timelapse photography
+Main Flask application for controlling timelapse photography with live preview
 """
 
 import os
@@ -14,8 +14,10 @@ from datetime import datetime, timedelta
 from pathlib import Path
 import subprocess
 import psutil
+import io
+import base64
 
-from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for
+from flask import Flask, render_template, request, jsonify, send_file, redirect, url_for, Response
 import schedule
 
 # Try to import camera modules (will work on Pi, fallback for development)
@@ -42,8 +44,10 @@ os.makedirs(PROJECTS_FOLDER, exist_ok=True)
 # Global variables
 current_session = None
 camera = None
+preview_camera = None
 capture_thread = None
 is_capturing = False
+is_preview_active = False
 
 class TimelapseSession:
     def __init__(self, name, interval_seconds, duration_hours, resolution, quality):
@@ -106,6 +110,22 @@ def init_camera():
             return False
     return CAMERA_AVAILABLE
 
+def init_preview_camera():
+    global preview_camera
+    if CAMERA_AVAILABLE and preview_camera is None:
+        try:
+            preview_camera = Picamera2()
+            # Configure for preview (lower resolution for performance)
+            preview_config = preview_camera.create_preview_configuration(
+                main={"size": (640, 480), "format": "RGB888"}
+            )
+            preview_camera.configure(preview_config)
+            return True
+        except Exception as e:
+            print(f"Failed to initialize preview camera: {e}")
+            return False
+    return CAMERA_AVAILABLE
+
 def capture_image(session, image_number):
     """Capture a single image"""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -134,6 +154,61 @@ def capture_image(session, image_number):
             f.write(f"Dummy image {image_number} at {timestamp}")
         session.last_image_path = filepath
         return True
+
+def generate_preview_frames():
+    """Generator function for camera preview frames"""
+    global preview_camera, is_preview_active
+    
+    while is_preview_active:
+        if CAMERA_AVAILABLE and preview_camera:
+            try:
+                # Capture frame as numpy array
+                frame = preview_camera.capture_array()
+                
+                # Convert to JPEG
+                from PIL import Image
+                pil_image = Image.fromarray(frame)
+                buffer = io.BytesIO()
+                pil_image.save(buffer, format='JPEG', quality=70)
+                buffer.seek(0)
+                
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.read() + b'\r\n')
+            except Exception as e:
+                print(f"Preview frame error: {e}")
+                time.sleep(0.1)
+        else:
+            # Fallback: generate a simple placeholder frame
+            try:
+                from PIL import Image, ImageDraw, ImageFont
+                img = Image.new('RGB', (640, 480), color='lightgray')
+                draw = ImageDraw.Draw(img)
+                text = "Camera Preview\nNot Available"
+                # Try to use default font, fallback to basic if not available
+                try:
+                    font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 24)
+                except:
+                    font = ImageFont.load_default()
+                
+                # Calculate text position (center)
+                bbox = draw.textbbox((0, 0), text, font=font)
+                text_width = bbox[2] - bbox[0]
+                text_height = bbox[3] - bbox[1]
+                x = (640 - text_width) // 2
+                y = (480 - text_height) // 2
+                
+                draw.text((x, y), text, fill='black', font=font, anchor='mm', align='center')
+                
+                buffer = io.BytesIO()
+                img.save(buffer, format='JPEG')
+                buffer.seek(0)
+                
+                yield (b'--frame\r\n'
+                       b'Content-Type: image/jpeg\r\n\r\n' + buffer.read() + b'\r\n')
+                time.sleep(0.1)  # Slower update rate for placeholder
+            except Exception as e:
+                print(f"Placeholder frame error: {e}")
+                time.sleep(0.5)
 
 def timelapse_worker(session):
     """Background worker for timelapse capture"""
@@ -194,10 +269,51 @@ def system_info():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/preview/start', methods=['POST'])
+def start_preview():
+    """Start camera preview"""
+    global is_preview_active, preview_camera
+    
+    if not CAMERA_AVAILABLE:
+        return jsonify({'error': 'Camera not available'}), 400
+    
+    if is_capturing:
+        return jsonify({'error': 'Cannot start preview while timelapse is running'}), 400
+    
+    try:
+        if not init_preview_camera():
+            return jsonify({'error': 'Failed to initialize camera'}), 500
+        
+        is_preview_active = True
+        preview_camera.start()
+        return jsonify({'message': 'Preview started'})
+    except Exception as e:
+        return jsonify({'error': f'Failed to start preview: {str(e)}'}), 500
+
+@app.route('/api/preview/stop', methods=['POST'])
+def stop_preview():
+    """Stop camera preview"""
+    global is_preview_active, preview_camera
+    
+    is_preview_active = False
+    if preview_camera:
+        try:
+            preview_camera.stop()
+        except:
+            pass
+    
+    return jsonify({'message': 'Preview stopped'})
+
+@app.route('/api/preview/stream')
+def preview_stream():
+    """Stream camera preview"""
+    return Response(generate_preview_frames(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
+
 @app.route('/api/start_timelapse', methods=['POST'])
 def start_timelapse():
     """Start a new timelapse session"""
-    global current_session, capture_thread, is_capturing
+    global current_session, capture_thread, is_capturing, is_preview_active, preview_camera
     
     if is_capturing:
         return jsonify({'error': 'Timelapse already running'}), 400
@@ -238,6 +354,14 @@ def start_timelapse():
             
     except (KeyError, ValueError) as e:
         return jsonify({'error': f'Invalid parameters: {str(e)}'}), 400
+    
+    # Stop preview before starting timelapse
+    is_preview_active = False
+    if preview_camera:
+        try:
+            preview_camera.stop()
+        except:
+            pass
     
     # Check if camera is available
     if not init_camera():
