@@ -374,6 +374,16 @@
                                min="1" max="100" value="100" required>
                     </div>
                     
+                    <div class="form-group">
+                        <label>Live Preview:</label>
+                        <div style="text-align:center;">
+                            <img id="cameraPreview" 
+                                 src="/api/preview" 
+                                 style="max-width:100%; border:2px solid #ccc; border-radius:10px;" 
+                                 alt="Camera preview">
+                        </div>
+                    </div>
+
                     <button type="submit" class="btn btn-primary">🚀 Start Timelapse</button>
                 </form>
             </div>
@@ -398,19 +408,7 @@
                 </div>
             </div>
         </div>
-        
-        <div class="form-group">
-            <label>Live Preview:</label>
-            <div style="text-align:center;">
-                <img id="cameraPreview" 
-                     src="/api/preview" 
-                     style="max-width:100%; border:2px solid #ccc; border-radius:10px;" 
-                     alt="Camera preview">
-            </div>
-        </div>
-
-
-
+            
         <!-- Projects Tab -->
         <div id="projectsTab" class="tab-content">
             <div class="card">
