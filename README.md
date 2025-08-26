@@ -1,7 +1,13 @@
 # Timecourse for Raspi
 A Raspberry Pi timelapse system with a web-based interface.
 
-After cloning the repo, create this file si the server runs on start up.
+You'll need to install these packages so the system works: 
+
+```ruby
+sudo apt install hostapd dnsmasq python3-psutil python3-opencv python3-flask python3-schedule
+```
+
+After cloning the repo, create this file so the server runs on start up.
 
 ```ruby
 sudo nano /etc/systemd/system/timelapse.service
@@ -19,9 +25,9 @@ Wants=network.target
 Type=simple
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/timelapse_app
-Environment=PATH=/home/pi/.local/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/bin/python3 /home/pi/timelapse_app/app.py
+WorkingDirectory=/home/pi/Documents/timecourse_for_raspi/timelapse_app
+Environment=PATH=/home/pi/Documents/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/usr/bin/python3 /home/pi/Documents/timecourse_for_raspi/timelapse_app/app.py
 Restart=always
 RestartSec=10
 StandardOutput=journal
@@ -100,3 +106,5 @@ And bring it up:
 ```ruby
 sudo nmcli connection up timelapse_ap
 ```
+
+To connect to the app, connect to the wifi network of the raspi and then go to 10.0.0.1:5000 in you browser.
