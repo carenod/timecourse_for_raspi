@@ -78,13 +78,22 @@ You can replace `Pi_Timelapse_AP` with your Wi-Fi device name if different.
 Then, set it to access point mode:
 
 ```ruby
-sudo nmcli connection modify timelapse_ap 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared
+sudo nmcli connection modify timelapse_ap 802-11-wireless.mode ap 802-11-wireless.band bg ipv4.method shared ipv4.addresses 10.0.0.1/24
 ```
 Add a password:
 
 ```ruby
 sudo nmcli connection modify timelapse_ap wifi-sec.key-mgmt wpa-psk wifi-sec.psk "raspberry123"
 ```
+
+Final configuration steps
+```ruby
+sudo systemctl stop dnsmasq
+sudo systemctl disable dnsmasq
+printf "[main]\ndns=dnsmasq\nplugins=ifupdown,keyfile\n\n[ifupdown]\nmanaged=false\n\n[device]\nwifi.scan-rand-mac-address=no" | sudo tee -a /etc/NetworkManager/NetworkManager.conf
+sudo systemctl restart NetworkManager
+```
+
 
 And bring it up:
 
